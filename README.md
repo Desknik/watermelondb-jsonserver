@@ -4,47 +4,62 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Get started
 
-1. Install dependencies
+1. Instale as dependências:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+2. Gere as pastas nativas (prebuild):
 
    ```bash
-   npx expo start
+   npx expo prebuild
    ```
 
-In the output, you'll find options to open the app in a
+3. Rode o app no Android:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   npx expo run:android
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Após rodar esses comandos, o app será instalado e executado no emulador ou dispositivo Android conectado.
+
+Se quiser rodar no iOS (em um Mac), utilize:
+
+```bash
+npx expo run:ios
+```
+
+Você também pode iniciar o Metro bundler com:
+
+```bash
+npx expo start
+```
+
+Em seguida, utilize as opções apresentadas para abrir o app em um emulador, dispositivo ou Expo Go.
+
+Você pode começar a desenvolver editando os arquivos dentro do diretório **app**. Este projeto utiliza [file-based routing](https://docs.expo.dev/router/introduction).
 
 ## Get a fresh project
 
-When you're ready, run:
+Quando estiver pronto, rode:
 
 ```bash
 npm run reset-project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Este comando moverá o código de exemplo para o diretório **app-example** e criará um diretório **app** em branco para você começar a desenvolver.
 
 ## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
+Para saber mais sobre desenvolvimento com Expo, veja os seguintes recursos:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- [Documentação do Expo](https://docs.expo.dev/): Aprenda o básico ou aprofunde-se com nossos [guias](https://docs.expo.dev/guides).
+- [Tutorial Expo](https://docs.expo.dev/tutorial/introduction/): Siga um tutorial passo a passo para criar um projeto que roda em Android, iOS e web.
 
 ## Join the community
 
-Join our community of developers creating universal apps.
+Junte-se à nossa comunidade de desenvolvedores criando apps universais.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo no GitHub](https://github.com/expo/expo): Veja nossa plataforma open source e contribua.
+- [Comunidade no Discord](https://chat.expo.dev): Converse com outros usuários e tire dúvidas.
