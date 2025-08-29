@@ -1,0 +1,45 @@
+sequenceDiagram
+    participant App as Expo App (WatermelonDB)
+    participant Backend as Backend
+    participant DB as Database
+
+    Note over App: App tem lastPulledAt = t1 ou não tem (novo dispositivo)
+
+    %% Tentativa de Pull
+    App->>Backend: GET /tasks?since=lastPulledAt (ou sem since)
+    Backend->>Backend: Verifica cache lastSync
+    alt lastPulledAt >= lastSync
+        Backend-->>App: 204 No Content / "Dados já atualizados"
+    else lastPulledAt < lastSync
+        Backend->>DB: SELECT * FROM tasks WHERE updated_at > lastPulledAt
+        DB-->>Backend: Registros atualizados
+        Backend-->>App: JSON com registros atualizados
+        App->>App: Aplica WatermelonDB (upsert / soft delete)
+        App->>App: Atualiza lastPulledAt = maior updated_at recebido
+    else since não enviado
+        Backend->>DB: SELECT * FROM tasks WHERE updated_at >= NOW() - INTERVAL 30 DAY
+        DB-->>Backend: Registros dos últimos 30 dias
+        Backend-->>App: JSON com registros dos últimos 30 dias
+        App->>App: Aplica WatermelonDB (upsert / soft delete)
+        App->>App: Atualiza lastPulledAt = maior updated_at recebido
+    end
+
+    %% Push (POST)
+    Note over App: POST envia um array de objetos modificados localmente
+    App->>Backend: POST /tasks/sync [ {id, fields..., updated_at}, ... ]
+
+    loop Para cada objeto recebido
+        alt updated_at >= lastSync
+            Backend->>DB: Inserir/Atualizar registro
+            DB-->>Backend: OK
+        else updated_at < lastSync
+            Backend->>DB: Buscar versão mais recente do registro
+            DB-->>Backend: Registro atualizado
+            Backend-->>App: Retornar versão mais recente (overwrite no App)
+        end
+    end
+
+    Backend->>Backend: Atualiza cache lastSync = agora()
+    Backend-->>App: JSON { synced: [ registros aceitos + versões corrigidas ], lastSync }
+    App->>App: Aplica WatermelonDB (upsert nos registros retornados)
+    App->>App: Atualiza lastPulledAt = lastSync recebido

@@ -1,75 +1,308 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { TaskForm } from '@/components/TaskForm'
+import { TaskItem } from '@/components/TaskItem'
+import { ThemedText } from '@/components/ThemedText'
+import { ThemedView } from '@/components/ThemedView'
+import Task from '@/database/models/Task'
+import { useTasks } from '@/hooks/useTasks'
+import { Ionicons } from '@expo/vector-icons'
+import React, { useState } from 'react'
+import { FlatList, Modal, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native'
 
 export default function HomeScreen() {
+  const {
+    tasks,
+    loading,
+    error,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTaskComplete,
+    refreshTasks,
+    clearError,
+  } = useTasks()
+
+  const [showForm, setShowForm] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
+
+  const handleCreateTask = async (title: string, description: string, priority: string) => {
+    const result = await createTask(title, description, priority)
+    if (result.success) {
+      setShowForm(false)
+    }
+  }
+
+  const handleUpdateTask = async (title: string, description: string, priority: string) => {
+    if (editingTask) {
+      const result = await updateTask(editingTask.id, { title, description, priority })
+      if (result.success) {
+        setEditingTask(null)
+        setShowForm(false)
+      }
+    }
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setShowForm(true)
+  }
+
+  const handleDeleteTask = async (id: string) => {
+    await deleteTask(id)
+  }
+
+  const handleToggleComplete = async (id: string) => {
+    await toggleTaskComplete(id)
+  }
+
+  const filteredTasks = tasks.filter((task: Task) => {
+    switch (filter) {
+      case 'pending':
+        return !task.completed
+      case 'completed':
+        return task.completed
+      default:
+        return true
+    }
+  })
+
+  const getFilterButtonStyle = (filterType: 'all' | 'pending' | 'completed') => ({
+    ...styles.filterButton,
+    backgroundColor: filter === filterType ? '#007AFF' : '#f0f0f0',
+  })
+
+  const getFilterButtonTextStyle = (filterType: 'all' | 'pending' | 'completed') => ({
+    ...styles.filterButtonText,
+    color: filter === filterType ? 'white' : '#666',
+  })
+
+  if (loading) {
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <ThemedText>Carregando tarefas...</ThemedText>
+      </ThemedView>
+    )
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+    <ThemedView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <ThemedText type="title">Minhas Tarefas</ThemedText>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowForm(true)}
+        >
+          <Ionicons name="add" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Filtros */}
+      <View style={styles.filterContainer}>
+        <TouchableOpacity
+          style={getFilterButtonStyle('all')}
+          onPress={() => setFilter('all')}
+        >
+          <ThemedText style={getFilterButtonTextStyle('all')}>Todas</ThemedText>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={getFilterButtonStyle('pending')}
+          onPress={() => setFilter('pending')}
+        >
+          <ThemedText style={getFilterButtonTextStyle('pending')}>Pendentes</ThemedText>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={getFilterButtonStyle('completed')}
+          onPress={() => setFilter('completed')}
+        >
+          <ThemedText style={getFilterButtonTextStyle('completed')}>Concluídas</ThemedText>
+        </TouchableOpacity>
+      </View>
+
+      {/* Mensagem de erro */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <ThemedText style={styles.errorText}>{error}</ThemedText>
+          <TouchableOpacity onPress={clearError} style={styles.errorButton}>
+            <Ionicons name="close" size={16} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Lista de tarefas */}
+      <FlatList
+        data={filteredTasks}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TaskItem
+            task={item}
+            onToggleComplete={handleToggleComplete}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+          />
+        )}
+        style={styles.taskList}
+        contentContainerStyle={styles.taskListContent}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refreshTasks} />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="checkmark-circle-outline" size={64} color="#ccc" />
+            <ThemedText style={styles.emptyText}>
+              {filter === 'all' 
+                ? 'Nenhuma tarefa encontrada' 
+                : filter === 'pending' 
+                  ? 'Nenhuma tarefa pendente' 
+                  : 'Nenhuma tarefa concluída'
+              }
+            </ThemedText>
+            <ThemedText style={styles.emptySubtext}>
+              {filter === 'all' 
+                ? 'Crie sua primeira tarefa!' 
+                : 'Todas as tarefas estão organizadas'
+              }
+            </ThemedText>
+          </View>
+        }
+      />
+
+      {/* Modal do formulário */}
+      <Modal
+        visible={showForm}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setShowForm(false)
+          setEditingTask(null)
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowForm(false)
+                setEditingTask(null)
+              }}
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+          
+          <TaskForm
+            task={editingTask}
+            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingTask(null)
+            }}
+          />
+        </View>
+      </Modal>
+    </ThemedView>
+  )
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 60,
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 8,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    backgroundColor: '#ff6b6b',
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
   },
-  stepContainer: {
-    gap: 8,
+  errorText: {
+    color: 'white',
+    flex: 1,
+  },
+  errorButton: {
+    padding: 4,
+  },
+  taskList: {
+    flex: 1,
+  },
+  taskListContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  emptySubtext: {
+    fontSize: 14,
+    opacity: 0.6,
+    textAlign: 'center',
   },
-});
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 20,
+    paddingTop: 60,
+  },
+  closeButton: {
+    padding: 8,
+  },
+})

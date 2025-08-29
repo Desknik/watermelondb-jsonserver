@@ -35,15 +35,6 @@
       "priority": "medium",
       "created_at": 1756400000000,
       "updated_at": 1756400000000
-    },
-    {
-      "id": "SpeI6dJNuMjhEmAQ",
-      "title": "Novo",
-      "description": "Dtyg",
-      "completed": true,
-      "priority": "high",
-      "created_at": 1756440030115,
-      "updated_at": 1756440041734
     }
   ]
 }

@@ -6,7 +6,7 @@ require('dotenv').config()
 const app = express()
 app.use(express.json())
 
-const dbFile = path.join(__dirname, '../database.json')
+const dbFile = path.join(__dirname, '../server/database.json')
 const router = jsonServer.router(dbFile)
 
 // lastSync global (resetado a cada start)
