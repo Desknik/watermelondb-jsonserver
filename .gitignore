@@ -44,3 +44,6 @@ ios/
 
 # Expo
 .expo/
+
+# Local env files
+.env

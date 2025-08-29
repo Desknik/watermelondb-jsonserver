@@ -1,0 +1,49 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Implementar WatermelonDB",
+      "description": "Configurar banco de dados local com sincronização",
+      "completed": true,
+      "priority": "high",
+      "created_at": 1756400000000,
+      "updated_at": 1756438448597
+    },
+    {
+      "id": "2",
+      "title": "Criar interface de usuário",
+      "description": "Desenvolver telas para CRUD de tarefas",
+      "completed": true,
+      "priority": "medium",
+      "created_at": 1756400000000,
+      "updated_at": 1756440009407
+    },
+    {
+      "id": "3",
+      "title": "Testar sincronização",
+      "description": "Verificar se os dados estão sincronizando corretamente",
+      "completed": true,
+      "priority": "low",
+      "created_at": 1756400000000,
+      "updated_at": 1756400000000
+    },
+    {
+      "id": "4",
+      "title": "Documentar código",
+      "description": "Criar documentação para futuras manutenções",
+      "completed": false,
+      "priority": "medium",
+      "created_at": 1756400000000,
+      "updated_at": 1756400000000
+    },
+    {
+      "id": "SpeI6dJNuMjhEmAQ",
+      "title": "Novo",
+      "description": "Dtyg",
+      "completed": true,
+      "priority": "high",
+      "created_at": 1756440030115,
+      "updated_at": 1756440041734
+    }
+  ]
+}
