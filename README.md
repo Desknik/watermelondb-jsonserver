@@ -1,8 +1,36 @@
-# Welcome to your Expo app 👋
+# Projeto de Estudos: Offline-First com Expo, WatermelonDB e JSON Server
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Este projeto é um estudo prático sobre a implementação de aplicações **offline-first** utilizando [Expo](https://expo.dev), [WatermelonDB](https://watermelondb.dev/) e um backend simulado com [JSON Server](https://github.com/typicode/json-server). O objetivo é demonstrar, de ponta a ponta, como funciona o fluxo de sincronização entre um app mobile e um backend, de forma robusta e próxima ao cenário real de produção.
 
-## Get started
+> **Nota:** Apesar de utilizar o JSON Server para simular o backend, todo o fluxo foi pensado para ser facilmente adaptado a qualquer backend real e banco de dados relacional, bastando implementar as rotas e regras de sincronização conforme o diagrama.
+
+## Funcionalidades
+
+- CRUD de tarefas com prioridade, descrição e data
+- Sincronização bidirecional (pull/push) entre app e backend
+- Suporte a uso offline e resolução de conflitos
+- Interface moderna e responsiva
+
+## Fluxo de Sincronização
+
+O app utiliza o WatermelonDB para persistência local e sincronização eficiente. O fluxo segue o padrão:
+
+1. **Pull:** O app busca do backend apenas os registros alterados desde a última sincronização (`lastPulledAt`).
+2. **Push:** O app envia ao backend as alterações feitas localmente desde o último sync.
+3. O backend responde com os dados aceitos e, se necessário, corrige conflitos devolvendo a versão mais recente do registro.
+4. O app aplica as atualizações localmente e atualiza o timestamp de sincronização.
+
+Veja o diagrama completo do fluxo:
+
+![Diagrama de Sincronização](./assets/readme/diagram.png)
+
+## Telas do App
+
+Veja abaixo a tela inicial do app:
+
+![Tela Inicial](./assets/readme/home.png)
+
+## Como rodar o projeto
 
 1. Instale as dependências:
 
@@ -22,13 +50,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo run:android
    ```
 
-Após rodar esses comandos, o app será instalado e executado no emulador ou dispositivo Android conectado.
-
-Se quiser rodar no iOS (em um Mac), utilize:
-
-```bash
-npx expo run:ios
-```
+   > Para iOS, utilize `npx expo run:ios` (em um Mac).
 
 Você também pode iniciar o Metro bundler com:
 
@@ -36,30 +58,20 @@ Você também pode iniciar o Metro bundler com:
 npx expo start
 ```
 
-Em seguida, utilize as opções apresentadas para abrir o app em um emulador, dispositivo ou Expo Go.
-
-Você pode começar a desenvolver editando os arquivos dentro do diretório **app**. Este projeto utiliza [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-Quando estiver pronto, rode:
+O backend simulado (JSON Server) pode ser iniciado com:
 
 ```bash
-npm run reset-project
+npm run server
 ```
 
-Este comando moverá o código de exemplo para o diretório **app-example** e criará um diretório **app** em branco para você começar a desenvolver.
+## Referências e Recursos
 
-## Learn more
+- [Documentação do Expo](https://docs.expo.dev/)
+- [WatermelonDB](https://watermelondb.dev/)
+- [JSON Server](https://github.com/typicode/json-server)
+- [Diagrama de Sincronização (ver imagem)](./assets/readme/diagram.png)
+- [Tela Inicial do App (ver imagem)](./assets/readme/home.png)
 
-Para saber mais sobre desenvolvimento com Expo, veja os seguintes recursos:
+## Sobre
 
-- [Documentação do Expo](https://docs.expo.dev/): Aprenda o básico ou aprofunde-se com nossos [guias](https://docs.expo.dev/guides).
-- [Tutorial Expo](https://docs.expo.dev/tutorial/introduction/): Siga um tutorial passo a passo para criar um projeto que roda em Android, iOS e web.
-
-## Join the community
-
-Junte-se à nossa comunidade de desenvolvedores criando apps universais.
-
-- [Expo no GitHub](https://github.com/expo/expo): Veja nossa plataforma open source e contribua.
-- [Comunidade no Discord](https://chat.expo.dev): Converse com outros usuários e tire dúvidas.
+Este projeto foi criado para fins didáticos, servindo como base para quem deseja entender e implementar sincronização offline-first em apps mobile, com backend customizável e fluxo realista de dados.
