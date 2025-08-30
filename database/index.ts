@@ -3,9 +3,10 @@ import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite'
 import SyncMetadata from './models/SyncMetadata'
 import Task from './models/Task'
 import schema from './schema'
+import Constants from "expo-constants";
 
 // Importa a variável de ambiente API_URL
-const API_URL = process.env.API_TOKEN || 'http://localhost:3000';
+const API_URL = Constants.expoConfig?.extra?.API_URL;
 
 console.log(API_URL)
 
