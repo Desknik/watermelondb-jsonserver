@@ -21,6 +21,10 @@ export const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) 
       setTitle(task.title)
       setDescription(task.description || '')
       setPriority(task.priority)
+    } else {
+      setTitle('')
+      setDescription('')
+      setPriority('medium')
     }
   }, [task])
 
@@ -198,3 +202,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 })
+
+export function getTaskFormKey(task?: Task | null) {
+  return task?.id || 'new';
+}

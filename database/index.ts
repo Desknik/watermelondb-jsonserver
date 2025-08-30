@@ -124,7 +124,7 @@ class SyncManager {
     } catch (error) {
       // Corrige: faz cast para Error para acessar message
       const errMsg = error instanceof Error ? error.message : String(error)
-      console.error('❌ PULL: Erro na sincronização:', errMsg)
+      console.warn('❌ PULL: Erro na sincronização:', errMsg)
       return { success: false, message: errMsg, count: 0 }
     }
   }

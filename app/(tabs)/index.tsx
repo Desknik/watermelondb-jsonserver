@@ -1,12 +1,16 @@
-import { TaskForm } from '@/components/TaskForm'
+import { TaskForm, getTaskFormKey } from '@/components/TaskForm'
 import { TaskItem } from '@/components/TaskItem'
 import { ThemedText } from '@/components/ThemedText'
 import { ThemedView } from '@/components/ThemedView'
+import { Colors } from '@/constants/Colors'
 import Task from '@/database/models/Task'
+import { useColorScheme } from '@/hooks/useColorScheme'
 import { useTasks } from '@/hooks/useTasks'
 import { Ionicons } from '@expo/vector-icons'
-import React, { useState } from 'react'
-import { FlatList, Modal, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native'
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
+import React, { useMemo, useRef, useState } from 'react'
+import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 export default function HomeScreen() {
   const {
@@ -25,10 +29,24 @@ export default function HomeScreen() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all')
 
+  const bottomSheetRef = useRef<BottomSheet>(null)
+  const snapPoints = useMemo(() => ['60%', '90%'], [])
+
+  const openSheet = () => {
+    setEditingTask(null)
+    setShowForm(true)
+    setTimeout(() => bottomSheetRef.current?.collapse(), 10)
+  }
+  const closeSheet = () => {
+    setShowForm(false)
+    setEditingTask(null)
+    bottomSheetRef.current?.close()
+  }
+
   const handleCreateTask = async (title: string, description: string, priority: string) => {
     const result = await createTask(title, description, priority)
     if (result.success) {
-      setShowForm(false)
+      closeSheet()
     }
   }
 
@@ -37,7 +55,7 @@ export default function HomeScreen() {
       const result = await updateTask(editingTask.id, { title, description, priority })
       if (result.success) {
         setEditingTask(null)
-        setShowForm(false)
+        closeSheet()
       }
     }
   }
@@ -45,6 +63,7 @@ export default function HomeScreen() {
   const handleEditTask = (task: Task) => {
     setEditingTask(task)
     setShowForm(true)
+    setTimeout(() => bottomSheetRef.current?.collapse(), 10)
   }
 
   const handleDeleteTask = async (id: string) => {
@@ -76,6 +95,9 @@ export default function HomeScreen() {
     color: filter === filterType ? 'white' : '#666',
   })
 
+  const colorScheme = useColorScheme();
+  const backgroundColor = Colors[colorScheme ?? 'light'].background;
+
   if (loading) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -85,124 +107,111 @@ export default function HomeScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <ThemedText type="title">Minhas Tarefas</ThemedText>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowForm(true)}
-        >
-          <Ionicons name="add" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Filtros */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={getFilterButtonStyle('all')}
-          onPress={() => setFilter('all')}
-        >
-          <ThemedText style={getFilterButtonTextStyle('all')}>Todas</ThemedText>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={getFilterButtonStyle('pending')}
-          onPress={() => setFilter('pending')}
-        >
-          <ThemedText style={getFilterButtonTextStyle('pending')}>Pendentes</ThemedText>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={getFilterButtonStyle('completed')}
-          onPress={() => setFilter('completed')}
-        >
-          <ThemedText style={getFilterButtonTextStyle('completed')}>Concluídas</ThemedText>
-        </TouchableOpacity>
-      </View>
-
-      {/* Mensagem de erro */}
-      {error && (
-        <View style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-          <TouchableOpacity onPress={clearError} style={styles.errorButton}>
-            <Ionicons name="close" size={16} color="white" />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemedView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <ThemedText type="title">Minhas Tarefas</ThemedText>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={openSheet}
+          >
+            <Ionicons name="add" size={24} color="white" />
           </TouchableOpacity>
         </View>
-      )}
 
-      {/* Lista de tarefas */}
-      <FlatList
-        data={filteredTasks}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TaskItem
-            task={item}
-            onToggleComplete={handleToggleComplete}
-            onEdit={handleEditTask}
-            onDelete={handleDeleteTask}
-          />
-        )}
-        style={styles.taskList}
-        contentContainerStyle={styles.taskListContent}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refreshTasks} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="checkmark-circle-outline" size={64} color="#ccc" />
-            <ThemedText style={styles.emptyText}>
-              {filter === 'all' 
-                ? 'Nenhuma tarefa encontrada' 
-                : filter === 'pending' 
-                  ? 'Nenhuma tarefa pendente' 
-                  : 'Nenhuma tarefa concluída'
-              }
-            </ThemedText>
-            <ThemedText style={styles.emptySubtext}>
-              {filter === 'all' 
-                ? 'Crie sua primeira tarefa!' 
-                : 'Todas as tarefas estão organizadas'
-              }
-            </ThemedText>
-          </View>
-        }
-      />
+        {/* Filtros */}
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            style={getFilterButtonStyle('all')}
+            onPress={() => setFilter('all')}
+          >
+            <ThemedText style={getFilterButtonTextStyle('all')}>Todas</ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={getFilterButtonStyle('pending')}
+            onPress={() => setFilter('pending')}
+          >
+            <ThemedText style={getFilterButtonTextStyle('pending')}>Pendentes</ThemedText>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={getFilterButtonStyle('completed')}
+            onPress={() => setFilter('completed')}
+          >
+            <ThemedText style={getFilterButtonTextStyle('completed')}>Concluídas</ThemedText>
+          </TouchableOpacity>
+        </View>
 
-      {/* Modal do formulário */}
-      <Modal
-        visible={showForm}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => {
-          setShowForm(false)
-          setEditingTask(null)
-        }}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity
-              onPress={() => {
-                setShowForm(false)
-                setEditingTask(null)
-              }}
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={24} color="#666" />
+        {/* Mensagem de erro */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <ThemedText style={styles.errorText}>{error}</ThemedText>
+            <TouchableOpacity onPress={clearError} style={styles.errorButton}>
+              <Ionicons name="close" size={16} color="white" />
             </TouchableOpacity>
           </View>
-          
-          <TaskForm
-            task={editingTask}
-            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-            onCancel={() => {
-              setShowForm(false)
-              setEditingTask(null)
-            }}
-          />
-        </View>
-      </Modal>
-    </ThemedView>
+        )}
+
+        {/* Lista de tarefas */}
+        <FlatList
+          data={filteredTasks}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TaskItem
+              task={item}
+              onToggleComplete={handleToggleComplete}
+              onEdit={handleEditTask}
+              onDelete={handleDeleteTask}
+            />
+          )}
+          style={styles.taskList}
+          contentContainerStyle={styles.taskListContent}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refreshTasks} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="checkmark-circle-outline" size={64} color="#ccc" />
+              <ThemedText style={styles.emptyText}>
+                {filter === 'all' 
+                  ? 'Nenhuma tarefa encontrada' 
+                  : filter === 'pending' 
+                    ? 'Nenhuma tarefa pendente' 
+                    : 'Nenhuma tarefa concluída'
+                }
+              </ThemedText>
+              <ThemedText style={styles.emptySubtext}>
+                {filter === 'all' 
+                  ? 'Crie sua primeira tarefa!' 
+                  : 'Todas as tarefas estão organizadas'
+                }
+              </ThemedText>
+            </View>
+          }
+        />
+
+        {/* BottomSheet do formulário */}
+        <BottomSheet
+          ref={bottomSheetRef}
+          index={showForm ? 0 : -1}
+          snapPoints={snapPoints}
+          enablePanDownToClose
+          onClose={closeSheet}
+          backgroundStyle={{ backgroundColor }}
+        >
+          <BottomSheetView>
+            <TaskForm
+              key={getTaskFormKey(editingTask)}
+              task={editingTask}
+              onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+              onCancel={closeSheet}
+            />
+          </BottomSheetView>
+        </BottomSheet>
+      </ThemedView>
+    </GestureHandlerRootView>
   )
 }
 
@@ -291,18 +300,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.6,
     textAlign: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: 20,
-    paddingTop: 60,
-  },
-  closeButton: {
-    padding: 8,
-  },
+  }
 })
